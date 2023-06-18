@@ -1,6 +1,6 @@
 import math
 from geographiclib.geodesic import Geodesic
-
+import json
 # Parameters:
 # uav_longitude - longitude of the center of the image in degrees
 # uav_latitude - latitude of the center of the image in degrees
@@ -16,16 +16,18 @@ from geographiclib.geodesic import Geodesic
 # Returns:
 # (obj_longitude, obj_latitude) - the estimated longitude and latitude of the object
 
-def locate(uav_latitude, uav_longitude, uav_altitude, bearing, cam_fov, img_width_px, img_height_px, obj_x_px, obj_y_px, roll=0, pitch=0):
+
+
+def locate(uav_latitude, uav_longitude, uav_altitude, bearing, cam_fov, img_width_px, img_height_px, obj_x_px, obj_y_px, roll:float=0, pitch:float=0):
     cam_fov_rad = math.radians(cam_fov)
-    diagonal_dist = math.tan(cam_fov_rad) * uav_altitude
+    diagonal_dist = math.tan(cam_fov_rad/2) * uav_altitude * 2
     img_width = math.sqrt(diagonal_dist**2 / (1 + img_height_px / img_width_px)) # w^2 + (h/w)*w^2 = diag^2
     img_height = img_height_px / img_width_px * img_width
     length_per_px = img_width / img_width_px
-    obj_x = obj_x_px * length_per_px + uav_altitude - math.tan(roll/180*math.pi)
+    obj_x = obj_x_px * length_per_px + uav_altitude * - math.tan(roll/180*math.pi)
     obj_y = obj_y_px * length_per_px + uav_altitude * math.tan(pitch/180*math.pi)
     dist = math.sqrt(obj_x**2 + obj_y**2)
-
+    
     angle = math.atan2(obj_y_px, obj_x_px) # Polar angle of the object point P
     true_bearing = (bearing + 90 - math.degrees(angle) + 360) % 360
     geod = Geodesic.WGS84
